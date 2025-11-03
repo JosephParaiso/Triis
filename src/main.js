@@ -49,9 +49,6 @@ scene.add(groundMesh);
 const cellSize = 0.2;
 const gridSize = 6;
 
-// 2D array to track occupancy (null = empty; can store meshes or IDs later)
-const grid = Array.from({ length: gridSize }, () => Array(gridSize).fill(null));
-
 // Visualize the grid as thin wireframe cells sitting on top of the ground
 const gridGroup = new THREE.Group();
 // Ground top surface is at y = -2.05 + (0.1 / 2) = -2.0
