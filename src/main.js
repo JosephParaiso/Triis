@@ -79,11 +79,17 @@ function snapToGrid(mesh) {
 
 // adds one cube as a part of tromino
 const trominoGeometry = new THREE.BoxGeometry(0.2, 0.2, 0.2);
-const trominoMaterial = new THREE.MeshPhongMaterial({
-  color: "red"
-});
+//Different color for each face of the cube for testing purposes
+const trominoMaterials = [
+  new THREE.MeshPhongMaterial({ color: 0xff0000 }), // right
+  new THREE.MeshPhongMaterial({ color: 0x00ff00 }), // left
+  new THREE.MeshPhongMaterial({ color: 0x0000ff }), // top
+  new THREE.MeshPhongMaterial({ color: 0xffff00 }), // bottom
+  new THREE.MeshPhongMaterial({ color: 0xff00ff }), // front
+  new THREE.MeshPhongMaterial({ color: 0x00ffff })  // back
+];
 
-const trominoMesh = new THREE.Mesh(trominoGeometry, trominoMaterial);
+const trominoMesh = new THREE.Mesh(trominoGeometry, trominoMaterials);
 snapToGrid(trominoMesh); // snaps to grid
 scene.add(trominoMesh);
 
@@ -99,16 +105,69 @@ const light2 = new THREE.DirectionalLight(0xffffff, 1);
 light2.position.set(-2, -4, -1);
 scene.add(light2);
 
+function moveTromino() {
+  var isCubeDown = false; // for p key
+
+  window.addEventListener('keydown', (event) => {
+  const step = cellSize;
+
+  switch (event.key) {
+    case 'ArrowLeft':
+      trominoMesh.position.x -= step;
+      break;
+    case 'ArrowRight':
+      trominoMesh.position.x += step;
+      break;
+    case 'ArrowUp':
+      trominoMesh.position.z -= step;
+      break;
+    case 'ArrowDown':
+      trominoMesh.position.z += step;
+      break;
+    case 'p': //toggle cube up or down for testing purposes
+      if (isCubeDown) {
+        trominoMesh.position.y += step*10;
+        isCubeDown = false;
+      } else {
+        trominoMesh.position.y -= step*10;
+        isCubeDown = true;
+      }
+      break;
+    case 'a':
+      trominoMesh.rotation.x += Math.PI / 2;
+      break;
+    case 'z':
+      trominoMesh.rotation.x -= Math.PI / 2;
+      break;
+    case 's':
+      trominoMesh.rotation.y += Math.PI / 2;
+      break;
+    case 'x':
+      trominoMesh.rotation.y -= Math.PI / 2;
+      break;
+    case 'd':
+      trominoMesh.rotation.z += Math.PI / 2;
+      break;
+    case 'c':
+      trominoMesh.rotation.z -= Math.PI / 2;
+      break;
+  }
+  //snapToGrid(trominoMesh); ISSUES
+});
+}
+
+moveTromino();
+
 // animation
 const animate = function () {
   requestAnimationFrame( animate );
 
   controls.update();
   // maintain grid snapping for tromino
-  // snapToGrid(trominoMesh); // Only call this when the tromino is moved
+  //snapToGrid(trominoMesh); // Only call this when the tromino is moved
   renderer.render(scene, camera);
 };
 
 animate();
 
-// gummi var hér
+// joseph var hér
