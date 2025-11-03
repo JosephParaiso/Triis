@@ -105,7 +105,7 @@ const animate = function () {
 
   controls.update();
   // maintain grid snapping for tromino
-  snapToGrid(trominoMesh);
+  // snapToGrid(trominoMesh); // Only call this when the tromino is moved
   renderer.render(scene, camera);
 };
 
