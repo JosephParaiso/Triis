@@ -43,3 +43,5 @@ const animate = function () {
 };
 
 animate();
+
+// gummi var hér
