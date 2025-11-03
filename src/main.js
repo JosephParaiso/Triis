@@ -44,4 +44,4 @@ const animate = function () {
 
 animate();
 
-// hurr hurr hurr - Freddy Fazbear or Michael Jackson I'm not really sure. Or Freddie Mercury. Yeah.ddcdddddddd
+// hurr hurr hurr - Freddy Fazbear or Michael Jackson I'm not really sure. Or Freddie Mercury. Yeah.
