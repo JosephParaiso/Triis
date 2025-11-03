@@ -14,11 +14,11 @@ const camera = new THREE.PerspectiveCamera(
   0.1,
   30
 );
-camera.position.set(0, 0, 4);
+camera.position.set(2.2, 2.2, 2.2);
 
 //Mouse controls
 const controls = new OrbitControls( camera, canvas );
-∂
+
 // renderer
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
 
