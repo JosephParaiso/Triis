@@ -99,16 +99,41 @@ const light2 = new THREE.DirectionalLight(0xffffff, 1);
 light2.position.set(-2, -4, -1);
 scene.add(light2);
 
+function moveTromino() {
+  window.addEventListener('keydown', (event) => {
+  const step = cellSize;
+
+  switch (event.key) {
+    case 'ArrowLeft':
+      trominoMesh.position.x -= step;
+      break;
+    case 'ArrowRight':
+      trominoMesh.position.x += step;
+      break;
+    case 'ArrowUp':
+      trominoMesh.position.z -= step;
+      break;
+    case 'ArrowDown':
+      trominoMesh.position.z += step;
+      break;
+  }
+
+  snapToGrid(trominoMesh); // snap after each move
+});
+}
+
+moveTromino();
+
 // animation
 const animate = function () {
   requestAnimationFrame( animate );
 
   controls.update();
   // maintain grid snapping for tromino
-  // snapToGrid(trominoMesh); // Only call this when the tromino is moved
+  //snapToGrid(trominoMesh); // Only call this when the tromino is moved
   renderer.render(scene, camera);
 };
 
 animate();
 
-// gummi var hér
+// joseph var hér
