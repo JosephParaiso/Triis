@@ -41,7 +41,7 @@ const groundMaterial = new THREE.MeshPhongMaterial({
 
 
 const groundMesh = new THREE.Mesh(groundGeometry, groundMaterial);
-groundMesh.position.set(0, -2.05, 0)
+groundMesh.position.set(0, -2.05, 0);
 scene.add(groundMesh);
 
 // --- GRID LOGIC ---
