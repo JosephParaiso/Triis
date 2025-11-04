@@ -1,6 +1,12 @@
 import * as THREE from "three";
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 
+
+const moveSpeed = 0.002;
+
+
+
+
 //get the canvas
 const canvas = document.querySelector("#c");
 
@@ -14,7 +20,7 @@ const camera = new THREE.PerspectiveCamera(
   0.1,
   30
 );
-camera.position.set(2.2, 2.2, 2.2);
+camera.position.set(1.6, 1.4, 2.4);
 
 //Mouse controls
 const controls = new OrbitControls( camera, canvas );
@@ -27,7 +33,7 @@ const boxGeometry = new THREE.BoxGeometry(1.2, 4, 1.2);
 const boxMaterial = new THREE.MeshPhongMaterial({
   color: "white",
   transparent: true,
-  opacity: 0.2
+  opacity: 0.1
 });
 
 const boxMesh = new THREE.Mesh(boxGeometry, boxMaterial);
@@ -61,7 +67,7 @@ for (let i = 0; i < gridSize; i++) {
     const z = (j - gridSize / 2 + 0.5) * cellSize;
 
     const cellGeom = new THREE.EdgesGeometry(new THREE.PlaneGeometry(cellSize, cellSize));
-    const cellMat = new THREE.LineBasicMaterial({ color: 0xffffff });
+    const cellMat = new THREE.LineBasicMaterial({ color: 0x000000, });
     const cellLines = new THREE.LineSegments(cellGeom, cellMat);
     cellLines.rotation.x = -Math.PI / 2; // lay it flat on the ground
     cellLines.position.set(x, gridY + 0.0001, z); // slight offset to prevent z-fighting
@@ -90,18 +96,19 @@ const trominoMaterials = [
 ];
 
 const trominoMesh = new THREE.Mesh(trominoGeometry, trominoMaterials);
-snapToGrid(trominoMesh); // snaps to grid
+trominoMesh.position.y = 2; // puts the tromino at the top of the box
+snapToGrid(trominoMesh); // snaps to grid once per frame, might be overkill
 scene.add(trominoMesh);
 
 
 
 // initialize light
-const light = new THREE.DirectionalLight(0xffffff, 1);
+const light = new THREE.DirectionalLight(0xffffff, 4);
 light.position.set(2, 4, 1);
 scene.add(light);
 
 // initialize light2
-const light2 = new THREE.DirectionalLight(0xffffff, 1);
+const light2 = new THREE.DirectionalLight(0xffffff, 4);
 light2.position.set(-2, -4, -1);
 scene.add(light2);
 
@@ -152,7 +159,7 @@ function moveTromino() {
       trominoMesh.rotation.z -= Math.PI / 2;
       break;
   }
-  //snapToGrid(trominoMesh); ISSUES
+
 });
 }
 
@@ -160,6 +167,8 @@ moveTromino();
 
 // animation
 const animate = function () {
+  trominoMesh.position.y -= moveSpeed;
+
   requestAnimationFrame( animate );
 
   controls.update();
@@ -170,4 +179,4 @@ const animate = function () {
 
 animate();
 
-// joseph var hér
+// gummi var hér
