@@ -1,10 +1,10 @@
 import * as THREE from "three";
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 
+// --- SETTINGS ---
+const moveSpeed = 0.005;
 
-const moveSpeed = 0.002;
-
-
+// --- END SETTINGS ---
 
 
 //get the canvas
@@ -76,10 +76,12 @@ for (let i = 0; i < gridSize; i++) {
 }
 scene.add(gridGroup);
 
-// Snaps the mesh to the grid
+// Snaps the mesh center to the nearest grid cell center
 function snapToGrid(mesh) {
-  mesh.position.x = (Math.round(mesh.position.x / cellSize) * cellSize - 0.1);
-  mesh.position.z = (Math.round(mesh.position.z / cellSize) * cellSize - 0.1);
+  // If gridSize is even, the cell centers are offset by half a cell from the origin (0,0)
+  const offset = (gridSize % 2 === 0) ? cellSize / 2 : 0;
+  mesh.position.x = Math.round((mesh.position.x - offset) / cellSize) * cellSize + offset;
+  mesh.position.z = Math.round((mesh.position.z - offset) / cellSize) * cellSize + offset;
 }
 // --- END GRID LOGIC ---
 
@@ -97,7 +99,7 @@ const trominoMaterials = [
 
 const trominoMesh = new THREE.Mesh(trominoGeometry, trominoMaterials);
 trominoMesh.position.y = 2; // puts the tromino at the top of the box
-snapToGrid(trominoMesh); // snaps to grid once per frame, might be overkill
+snapToGrid(trominoMesh); // snaps to grid once
 scene.add(trominoMesh);
 
 
@@ -120,16 +122,24 @@ function moveTromino() {
 
   switch (event.key) {
     case 'ArrowLeft':
-      trominoMesh.position.x -= step;
+      if (trominoMesh.position.x > -0.4) {
+        trominoMesh.position.x -= step;
+      }
       break;
     case 'ArrowRight':
-      trominoMesh.position.x += step;
+      if (trominoMesh.position.x < 0.4) {
+        trominoMesh.position.x += step;
+      }
       break;
     case 'ArrowUp':
-      trominoMesh.position.z -= step;
+      if (trominoMesh.position.z > -0.4) {
+        trominoMesh.position.z -= step;
+      }
       break;
     case 'ArrowDown':
-      trominoMesh.position.z += step;
+      if (trominoMesh.position.z < 0.4) {
+        trominoMesh.position.z += step;
+      }
       break;
     case 'p': //toggle cube up or down for testing purposes
       if (isCubeDown) {
@@ -141,10 +151,10 @@ function moveTromino() {
       }
       break;
     case 'a':
-      trominoMesh.rotation.x += Math.PI / 2;
+      trominoMesh.rotation.x -= Math.PI / 2;
       break;
     case 'z':
-      trominoMesh.rotation.x -= Math.PI / 2;
+      trominoMesh.rotation.x += Math.PI / 2;
       break;
     case 's':
       trominoMesh.rotation.y += Math.PI / 2;
@@ -160,6 +170,7 @@ function moveTromino() {
       break;
   }
 
+  snapToGrid(trominoMesh); // snaps to grid after each movement
 });
 }
 
@@ -167,7 +178,11 @@ moveTromino();
 
 // animation
 const animate = function () {
-  trominoMesh.position.y -= moveSpeed;
+
+  // cube moves down until it reaches the bottom
+  if (trominoMesh.position.y > -1.9) {
+    trominoMesh.position.y -= moveSpeed;
+  }
 
   requestAnimationFrame( animate );
 
