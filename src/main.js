@@ -352,7 +352,7 @@ const animate = function () {
       addToLayer(trominoMesh);
 
       let r = Math.round(Math.random());
-      if (r == 1) {
+      if (r === 1) {
         spawnLTromino();
       } else {
         spawnStraightTromino();
