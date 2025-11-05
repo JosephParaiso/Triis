@@ -171,7 +171,7 @@ function spawnLTromino() {
   // Arrange them in an L-shape: center (0,0), left (-cellSize, 0), down (0, -cellSize)
   // Use cellSize (0.2) so each cube sits exactly on grid cells
   left.position.x = -cellSize;   // -0.2
-  down.position.y = -cellSize;   // +0.2
+  down.position.y = -cellSize;   // -0.2
   // center stays at 0
 
   // Add cubes to the group
