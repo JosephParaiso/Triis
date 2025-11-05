@@ -2,7 +2,8 @@ import * as THREE from "three";
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 
 // --- SETTINGS ---
-const moveSpeed = 0.005;
+let moveSpeed = 0.005;
+let speedUp = 0.08;
 const gridHeight = 20;
 
 // --- END SETTINGS ---
@@ -164,13 +165,14 @@ function spawnStraightTromino() {
 }
 
 function moveTromino() {
-  var isCubeDown = false; // for p key
-
-  window.addEventListener('keydown', (event) => {
+   window.addEventListener('keydown', (event) => {
     if (!trominoMesh) return;
     const step = cellSize;
 
     switch (event.key) {
+      case 'p':
+        moveSpeed = speedUp;
+        break;
       case 'ArrowLeft':
         if (trominoMesh.position.x > -0.4) {
           trominoMesh.position.x -= step;
@@ -189,15 +191,6 @@ function moveTromino() {
       case 'ArrowDown':
         if (trominoMesh.position.z < 0.4) {
           trominoMesh.position.z += step;
-        }
-        break;
-      case 'p': //toggle cube up or down for testing purposes
-        if (isCubeDown) {
-          trominoMesh.position.y += step*10;
-          isCubeDown = false;
-        } else {
-          trominoMesh.position.y -= step*10;
-          isCubeDown = true;
         }
         break;
       case 'a':
@@ -221,6 +214,13 @@ function moveTromino() {
     }
 
     snapToGrid(trominoMesh); // snaps to grid after each movement
+  });
+
+
+  window.addEventListener('keyup', (event) => {
+    if (event.key === 'p') {
+      moveSpeed = 0.005;
+    }
   });
 }
 
