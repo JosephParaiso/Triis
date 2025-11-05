@@ -105,7 +105,6 @@ for (let y = 0; y < gridHeight; y++) {
   occ.push(layer);
 }
 
-
 // initialize light
 const light = new THREE.DirectionalLight(0xffffff, 4);
 light.position.set(2, 4, 1);
@@ -228,17 +227,19 @@ function moveTromino() {
 // --- Some helper function ----
 const half = gridSize / 2;
 
-// cube center Y at layer iy is: gridY + (iy + 0.5) * cellSize
+// converts cube's y position (world y position) into an index for layer
 function yToLayerIndex(worldY) {
   return Math.round((worldY - gridY) / cellSize - 0.5);
 }
 
+// converts a cube’s world position (its actual X/Z coordinates in 3D space) into grid indices
 function xzToCellIndices(worldX, worldZ) {
   const ix = Math.round(worldX / cellSize + half - 0.5);
   const iz = Math.round(worldZ / cellSize + half - 0.5);
   return { ix, iz };
 }
 
+//Currently if this function and its uses is removed game crashes when cubes go out of bounds !!!
 function inBounds(ix, iy, iz) {
   return (
     iy >= 0 && iy < gridHeight &&
@@ -263,7 +264,8 @@ function addToLayer(trominoGroup) {
     // Ungroup 
     scene.attach(cube);
 
-    // Snap to exact cell center 
+    // Snap to exact cell center
+    // Currently when adding snapToGrid() function cubes lock sligthly ABOVE the ground
     cube.position.set(
       (ix - half + 0.5) * cellSize,
       gridY + (iy + 0.5) * cellSize,
@@ -271,7 +273,9 @@ function addToLayer(trominoGroup) {
     );
 
     // Record in layers
-    if (!layers[iy]) layers[iy] = [];
+    if (!layers[iy]) {
+      layers[iy] = [];
+    }
     layers[iy].push(cube);
 
     if (inBounds(ix, iy, iz)) {
