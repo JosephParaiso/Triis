@@ -267,7 +267,7 @@ function addToLayer(trominoGroup) {
     scene.attach(cube);
 
     // Snap to exact cell center
-    // Currently when adding snapToGrid() function cubes lock sligthly ABOVE the ground
+    // Currently when adding snapToGrid() function cubes lock slightly ABOVE the ground
     cube.position.set(
       (ix - half + 0.5) * cellSize,
       gridY + (iy + 0.5) * cellSize,
