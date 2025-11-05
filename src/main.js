@@ -36,7 +36,7 @@ renderer.setSize(size * 0.8, size * 0.8);
 let trominoMesh; // global ref for current tromino (THREE.Group)
 
 // adds the box to the scene with Phong
-const boxGeometry = new THREE.BoxGeometry(1.2, 4, 1.2);
+const boxGeometry = new THREE.BoxGeometry(1.201, 4, 1.201);
 const boxMaterial = new THREE.MeshPhongMaterial({
   color: "white",
   transparent: true,
@@ -119,15 +119,10 @@ scene.add(light2);
 function spawnTromino() {
   // adds one cube as a part of tromino
   const trominoGeometry = new THREE.BoxGeometry(0.2, 0.2, 0.2);
-  // Different color for each face of the cube for testing purposes
-  const trominoMaterials = [
-    new THREE.MeshPhongMaterial({ color: 0xff0000 }), // right
-    new THREE.MeshPhongMaterial({ color: 0x00ff00 }), // left
-    new THREE.MeshPhongMaterial({ color: 0x0000ff }), // top
-    new THREE.MeshPhongMaterial({ color: 0xffff00 }), // bottom
-    new THREE.MeshPhongMaterial({ color: 0xff00ff }), // front
-    new THREE.MeshPhongMaterial({ color: 0x00ffff })  // back
-  ];
+  // Assign a random color from a set of options
+  const colors = ["red", "green", "blue", "yellow", "purple", "cyan", "orange"];
+  const randomColor = colors[Math.floor(Math.random() * colors.length)];
+  const trominoMaterials = new THREE.MeshPhongMaterial({ color: randomColor });
 
   const cube = new THREE.Mesh(trominoGeometry, trominoMaterials);
   // keep cube local; position relative to its parent
@@ -154,6 +149,35 @@ function spawnStraightTromino() {
   group.add(center);
   group.add(left);
   group.add(right);
+
+  // Place the whole tromino above the box and snap to grid once
+  group.position.y = 2; // puts the tromino at the top of the box
+  snapToGrid(group);    // snaps the whole tromino to grid
+
+  // Save and add to scene
+  trominoMesh = group;
+  scene.add(trominoMesh);
+}
+
+function spawnLTromino() {
+  // Create a group to represent the tromino
+  const group = new THREE.Group();
+
+  // Create three cubes using spawnTromino()
+  const center = spawnTromino();
+  const left = spawnTromino();
+  const down = spawnTromino();
+
+  // Arrange them in an L-shape: center (0,0), left (-cellSize, 0), down (0, -cellSize)
+  // Use cellSize (0.2) so each cube sits exactly on grid cells
+  left.position.x = -cellSize;   // -0.2
+  down.position.y = -cellSize;   // -0.2
+  // center stays at 0
+
+  // Add cubes to the group
+  group.add(center);
+  group.add(left);
+  group.add(down);
 
   // Place the whole tromino above the box and snap to grid once
   group.position.y = 2; // puts the tromino at the top of the box
@@ -326,7 +350,13 @@ const animate = function () {
    if (trominoMesh) {
     if (collisionCheck(trominoMesh)) {
       addToLayer(trominoMesh);
-      spawnStraightTromino();
+
+      let r = Math.round(Math.random());
+      if (r === 1) {
+        spawnLTromino();
+      } else {
+        spawnStraightTromino();
+      }
     } else {
       trominoMesh.position.y -= moveSpeed;
     }
