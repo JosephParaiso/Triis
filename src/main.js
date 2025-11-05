@@ -2,10 +2,13 @@ import * as THREE from "three";
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 
 // --- SETTINGS ---
-const moveSpeed = 0.005;
+let moveSpeed = 0.005;
+let speedUp = 0.08;
+const gridHeight = 20;
 
 // --- END SETTINGS ---
 
+const layers = [];
 
 //get the canvas
 const canvas = document.querySelector("#c");
@@ -89,7 +92,19 @@ function snapToGrid(mesh) {
 }
 // --- END GRID LOGIC ---
 
-
+//Keep track of where cubes are
+const occ = [];
+for (let y = 0; y < gridHeight; y++) {
+  const layer = [];
+  for (let x = 0; x < gridSize; x++) {
+    const row = [];
+    for (let z = 0; z < gridSize; z++) {
+      row.push(null);
+    }
+    layer.push(row);
+  }
+  occ.push(layer);
+}
 
 // initialize light
 const light = new THREE.DirectionalLight(0xffffff, 4);
@@ -150,13 +165,14 @@ function spawnStraightTromino() {
 }
 
 function moveTromino() {
-  var isCubeDown = false; // for p key
-
-  window.addEventListener('keydown', (event) => {
+   window.addEventListener('keydown', (event) => {
     if (!trominoMesh) return;
     const step = cellSize;
 
     switch (event.key) {
+      case 'p':
+        moveSpeed = speedUp;
+        break;
       case 'ArrowLeft':
         if (trominoMesh.position.x > -0.4) {
           trominoMesh.position.x -= step;
@@ -175,15 +191,6 @@ function moveTromino() {
       case 'ArrowDown':
         if (trominoMesh.position.z < 0.4) {
           trominoMesh.position.z += step;
-        }
-        break;
-      case 'p': //toggle cube up or down for testing purposes
-        if (isCubeDown) {
-          trominoMesh.position.y += step*10;
-          isCubeDown = false;
-        } else {
-          trominoMesh.position.y -= step*10;
-          isCubeDown = true;
         }
         break;
       case 'a':
@@ -208,6 +215,106 @@ function moveTromino() {
 
     snapToGrid(trominoMesh); // snaps to grid after each movement
   });
+
+
+  window.addEventListener('keyup', (event) => {
+    if (event.key === 'p') {
+      moveSpeed = 0.005;
+    }
+  });
+}
+
+// --- Some helper function ----
+const half = gridSize / 2;
+
+// converts cube's y position (world y position) into an index for layer
+function yToLayerIndex(worldY) {
+  return Math.round((worldY - gridY) / cellSize - 0.5);
+}
+
+// converts a cube’s world position (its actual X/Z coordinates in 3D space) into grid indices
+function xzToCellIndices(worldX, worldZ) {
+  const ix = Math.round(worldX / cellSize + half - 0.5);
+  const iz = Math.round(worldZ / cellSize + half - 0.5);
+  return { ix, iz };
+}
+
+// The inBounds function is essential to prevent array index out of bounds errors
+// when cubes move or are placed outside the grid. It ensures that only valid grid
+// indices are accessed, avoiding runtime crashes due to invalid array access.
+function inBounds(ix, iy, iz) {
+  return (
+    iy >= 0 && iy < gridHeight &&
+    ix >= 0 && ix < gridSize &&
+    iz >= 0 && iz < gridSize
+  );
+}
+// ------ -------
+
+//Ungroups trominoGroup and adds each cube to appropriate layer group
+function addToLayer(trominoGroup) {
+  trominoGroup.updateMatrixWorld(true);
+
+  const cubes = trominoGroup.children.slice();
+  cubes.forEach((cube) => {
+    const wp = new THREE.Vector3();
+    cube.getWorldPosition(wp);
+
+    const iy = yToLayerIndex(wp.y);
+    const { ix, iz } = xzToCellIndices(wp.x, wp.z);
+
+    // Ungroup 
+    scene.attach(cube);
+
+    // Snap to exact cell center
+    // Currently when adding snapToGrid() function cubes lock slightly ABOVE the ground
+    cube.position.set(
+      (ix - half + 0.5) * cellSize,
+      gridY + (iy + 0.5) * cellSize,
+      (iz - half + 0.5) * cellSize
+    );
+
+    // Record in layers
+    if (!layers[iy]) {
+      layers[iy] = [];
+    }
+    layers[iy].push(cube);
+
+    if (inBounds(ix, iy, iz)) {
+      occ[iy][ix][iz] = cube;
+    }
+  });
+
+  scene.remove(trominoGroup);
+  trominoMesh = null;
+}
+
+function collisionCheck(TrominoGroup) {
+  // ensure children world positions are current
+  TrominoGroup.updateMatrixWorld(true);
+
+  for (const cube of TrominoGroup.children) {
+    const wp = new THREE.Vector3();
+    cube.getWorldPosition(wp);
+
+    // current cell
+    const iy = yToLayerIndex(wp.y);
+    const { ix, iz } = xzToCellIndices(wp.x, wp.z);
+
+    // the cell one layer below
+    const nextIy = iy - 1;
+
+    // hit the floor?
+    if (nextIy < 0) return true;
+
+    // out of bounds horizontally?
+    if (!inBounds(ix, nextIy, iz)) return true;
+
+    // landed on an occupied cell below?
+    if (occ[nextIy][ix][iz]) return true;
+  }
+
+  return false;
 }
 
 spawnStraightTromino();
@@ -216,11 +323,13 @@ moveTromino();
 // animation
 const animate = function () {
 
-  // cube moves down until it reaches the bottom
-  if (trominoMesh && trominoMesh.position.y > -1.9) {
-    trominoMesh.position.y -= moveSpeed;
-  } else {
-    spawnStraightTromino();
+   if (trominoMesh) {
+    if (collisionCheck(trominoMesh)) {
+      addToLayer(trominoMesh);
+      spawnStraightTromino();
+    } else {
+      trominoMesh.position.y -= moveSpeed;
+    }
   }
 
   requestAnimationFrame( animate );
@@ -233,4 +342,4 @@ const animate = function () {
 
 animate();
 
-// gummi var hér
+// joseph var hér
