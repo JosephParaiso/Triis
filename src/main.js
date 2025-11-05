@@ -255,7 +255,7 @@ function inBounds(ix, iy, iz) {
 function addToLayer(trominoGroup) {
   trominoGroup.updateMatrixWorld(true);
 
- const cubes = trominoGroup.children.slice();
+  const cubes = trominoGroup.children.slice();
   cubes.forEach((cube) => {
     const wp = new THREE.Vector3();
     cube.getWorldPosition(wp);
