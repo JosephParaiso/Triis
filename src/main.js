@@ -239,7 +239,9 @@ function xzToCellIndices(worldX, worldZ) {
   return { ix, iz };
 }
 
-//Currently if this function and its uses is removed game crashes when cubes go out of bounds !!!
+// The inBounds function is essential to prevent array index out of bounds errors
+// when cubes move or are placed outside the grid. It ensures that only valid grid
+// indices are accessed, avoiding runtime crashes due to invalid array access.
 function inBounds(ix, iy, iz) {
   return (
     iy >= 0 && iy < gridHeight &&
