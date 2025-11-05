@@ -168,7 +168,7 @@ function spawnLTromino() {
   const left = spawnTromino();
   const down = spawnTromino();
 
-  // Arrange them in a straight line along the X axis (3 long)
+  // Arrange them in an L-shape: center (0,0), left (-cellSize, 0), down (0, -cellSize)
   // Use cellSize (0.2) so each cube sits exactly on grid cells
   left.position.x = -cellSize;   // -0.2
   down.position.y = -cellSize;   // +0.2
