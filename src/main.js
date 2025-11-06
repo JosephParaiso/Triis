@@ -369,6 +369,28 @@ function collisionCheck(TrominoGroup) {
   return false;
 }
 
+function deleteLayer(y) {
+  // Remove cubes and free gpu memory
+  for (const cube of layers[y]) {
+    scene.remove(cube);
+    cube.material.dispose();
+    cube.geometry.dispose();
+  }
+
+  // Update occupancy array, all null for layer y
+  for (let x = 0; x < gridSize; x++) {
+    for (let z = 0; z < gridSize; z++) {
+      occ[y][x][z] = null;
+    }
+  }
+
+  layers[y] = [];
+}
+
+document.getElementById("deleteLayer0Button").addEventListener("click", () => {
+  deleteLayer(0);
+});
+
 spawnStraightTromino();
 moveTromino();
 
