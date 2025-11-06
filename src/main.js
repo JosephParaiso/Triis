@@ -369,6 +369,16 @@ function collisionCheck(TrominoGroup) {
   return false;
 }
 
+//returns a boolean
+function isLayerFull(y){
+  //Checking if layers[y] exist else might cause crash if we check the length if it doesn't exist
+  if (layers[y] && layers[y].length == gridSize * gridSize) {
+    return true;
+  } else {
+    return false;
+  }
+}
+
 function deleteLayer(y) {
   // Remove cubes and free gpu memory
   for (const cube of layers[y]) {
@@ -386,6 +396,7 @@ function deleteLayer(y) {
 
   layers[y] = [];
 }
+
 
 document.getElementById("deleteLayer0Button").addEventListener("click", () => {
   deleteLayer(0);
