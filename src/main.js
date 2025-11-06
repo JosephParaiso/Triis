@@ -116,13 +116,20 @@ const light2 = new THREE.DirectionalLight(0xffffff, 4);
 light2.position.set(-2, -4, -1);
 scene.add(light2);
 
+// Assign a random color from a set of options
+const colors = ["red", "green", "blue", "yellow", "purple", "cyan", "orange"];
+let trominoSpawnCount = 2;
+let lastColor = colors[0];
+
 function spawnTromino() {
+  trominoSpawnCount++;
+  if (trominoSpawnCount === 3) {
+    lastColor = colors[Math.floor(Math.random() * colors.length)];
+    trominoSpawnCount = 0;
+  }
   // adds one cube as a part of tromino
   const trominoGeometry = new THREE.BoxGeometry(0.2, 0.2, 0.2);
-  // Assign a random color from a set of options
-  const colors = ["red", "green", "blue", "yellow", "purple", "cyan", "orange"];
-  const randomColor = colors[Math.floor(Math.random() * colors.length)];
-  const trominoMaterials = new THREE.MeshPhongMaterial({ color: randomColor });
+  const trominoMaterials = new THREE.MeshPhongMaterial({ color: lastColor });
 
   const cube = new THREE.Mesh(trominoGeometry, trominoMaterials);
   // keep cube local; position relative to its parent
@@ -198,46 +205,37 @@ function moveTromino() {
         moveSpeed = speedUp;
         break;
       case 'ArrowLeft':
-        if (trominoMesh.position.x > -0.4) {
-          trominoMesh.position.x -= step;
-        }
+        tryTransform(trominoMesh, () => { trominoMesh.position.x -= step; });
         break;
       case 'ArrowRight':
-        if (trominoMesh.position.x < 0.4) {
-          trominoMesh.position.x += step;
-        }
+        tryTransform(trominoMesh, () => { trominoMesh.position.x += step; });
         break;
       case 'ArrowUp':
-        if (trominoMesh.position.z > -0.4) {
-          trominoMesh.position.z -= step;
-        }
+        tryTransform(trominoMesh, () => { trominoMesh.position.z -= step; });
         break;
       case 'ArrowDown':
-        if (trominoMesh.position.z < 0.4) {
-          trominoMesh.position.z += step;
-        }
+        tryTransform(trominoMesh, () => { trominoMesh.position.z += step; });
         break;
       case 'a':
-        trominoMesh.rotation.x -= Math.PI / 2;
+        tryTransform(trominoMesh, () => { trominoMesh.rotation.x -= Math.PI / 2; });
         break;
       case 'z':
-        trominoMesh.rotation.x += Math.PI / 2;
+        tryTransform(trominoMesh, () => { trominoMesh.rotation.x += Math.PI / 2; });
         break;
       case 's':
-        trominoMesh.rotation.y += Math.PI / 2;
+        tryTransform(trominoMesh, () => { trominoMesh.rotation.y += Math.PI / 2; });
         break;
       case 'x':
-        trominoMesh.rotation.y -= Math.PI / 2;
+        tryTransform(trominoMesh, () => { trominoMesh.rotation.y -= Math.PI / 2; });
         break;
       case 'd':
-        trominoMesh.rotation.z += Math.PI / 2;
+        tryTransform(trominoMesh, () => { trominoMesh.rotation.z += Math.PI / 2; });
         break;
       case 'c':
-        trominoMesh.rotation.z -= Math.PI / 2;
+        tryTransform(trominoMesh, () => { trominoMesh.rotation.z -= Math.PI / 2; });
         break;
     }
 
-    snapToGrid(trominoMesh); // snaps to grid after each movement
   });
 
 
@@ -272,6 +270,36 @@ function inBounds(ix, iy, iz) {
     ix >= 0 && ix < gridSize &&
     iz >= 0 && iz < gridSize
   );
+}
+
+// Ensure every cube of a tromino stays within the XZ grid bounds
+function withinXZBounds(group) {
+  group.updateMatrixWorld(true);
+  for (const cube of group.children) {
+    const wp = new THREE.Vector3();
+    cube.getWorldPosition(wp);
+    const { ix, iz } = xzToCellIndices(wp.x, wp.z);
+    if (ix < 0 || ix >= gridSize || iz < 0 || iz >= gridSize) {
+      return false;
+    }
+  }
+  return true;
+}
+
+// Try a transform; keep it only if all children remain in-bounds
+function tryTransform(group, apply) {
+  const prevPos = group.position.clone();
+  const prevRot = group.rotation.clone();
+  apply();
+  if (withinXZBounds(group)) {
+    snapToGrid(group);
+    return true;
+  } else {
+    group.position.copy(prevPos);
+    group.rotation.copy(prevRot);
+    group.updateMatrixWorld(true);
+    return false;
+  }
 }
 // ------ -------
 
@@ -371,5 +399,3 @@ const animate = function () {
 };
 
 animate();
-
-// joseph var hér
