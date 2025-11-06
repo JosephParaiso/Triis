@@ -5,6 +5,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 let moveSpeed = 0.005;
 let speedUp = 0.08;
 const gridHeight = 20;
+let allowLTrominos = true;
 
 // --- END SETTINGS ---
 
@@ -195,12 +196,23 @@ function spawnLTromino() {
   scene.add(trominoMesh);
 }
 
+function slam() {
+  if (!trominoMesh) return;
+  while (!collisionCheck(trominoMesh)) {
+    trominoMesh.position.y -= cellSize;
+    trominoMesh.updateMatrixWorld(true);
+  }
+}
+
 function moveTromino() {
    window.addEventListener('keydown', (event) => {
     if (!trominoMesh) return;
     const step = cellSize;
 
     switch (event.key) {
+      case ' ':
+        slam();
+        break;
       case 'p':
         moveSpeed = speedUp;
         break;
@@ -341,6 +353,7 @@ function addToLayer(trominoGroup) {
   trominoMesh = null;
 }
 
+//returns a boolean
 function collisionCheck(TrominoGroup) {
   // ensure children world positions are current
   TrominoGroup.updateMatrixWorld(true);
@@ -369,6 +382,66 @@ function collisionCheck(TrominoGroup) {
   return false;
 }
 
+//returns a boolean
+function isLayerFull(y){
+  for (let x = 0; x < gridSize; x++) {
+    for (let z = 0; z < gridSize; z++) {
+      if (occ[y][x][z] === null) {
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
+function deleteLayer(y) {
+  // Remove cubes and free gpu memory
+  for (const cube of layers[y]) {
+    scene.remove(cube);
+    cube.material.dispose();
+    cube.geometry.dispose();
+  }
+
+  // Update occupancy array, all null for layer y
+  for (let x = 0; x < gridSize; x++) {
+    for (let z = 0; z < gridSize; z++) {
+      occ[y][x][z] = null;
+    }
+  }
+
+  layers[y] = [];
+}
+
+
+const delBtn = document.getElementById("deleteLayer0Button");
+delBtn.addEventListener("click", () => {
+  deleteLayer(0);
+  delBtn.blur();
+});
+
+//Stops time
+//Actually just sets move spd of tromino to 0
+const timeBtn = document.getElementById("timeBtn");
+timeBtn.addEventListener("click", () => {
+  if (moveSpeed) {
+    moveSpeed = 0;
+  } else {
+    moveSpeed = 0.005;
+  }
+  timeBtn.blur();
+});
+
+//Disables/enables the random spawning of L blocks
+const lBtn = document.getElementById("lBtn");
+lBtn.addEventListener("click", () => {
+  if (allowLTrominos) {
+    allowLTrominos = false;
+  } else {
+    allowLTrominos = true;
+  }
+  lBtn.blur();
+});
+
 spawnStraightTromino();
 moveTromino();
 
@@ -379,8 +452,15 @@ const animate = function () {
     if (collisionCheck(trominoMesh)) {
       addToLayer(trominoMesh);
 
+      //Check if every layer is full and delete
+      for (let y = 0; y < gridHeight; y++) {
+        if (isLayerFull(y)) {
+          deleteLayer(y);
+        }
+      } 
+
       let r = Math.round(Math.random());
-      if (r === 1) {
+      if (r === 1 && allowLTrominos) {
         spawnLTromino();
       } else {
         spawnStraightTromino();
