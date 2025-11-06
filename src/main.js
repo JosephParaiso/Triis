@@ -371,12 +371,14 @@ function collisionCheck(TrominoGroup) {
 
 //returns a boolean
 function isLayerFull(y){
-  //Checking if layers[y] exist else might cause crash if we check the length if it doesn't exist
-  if (layers[y] && layers[y].length == gridSize * gridSize) {
-    return true;
-  } else {
-    return false;
+  for (let x = 0; x < gridSize; x++) {
+    for (let z = 0; z < gridSize; z++) {
+      if (occ[y][x][z] === null) {
+        return false;
+      }
+    }
   }
+  return true;
 }
 
 function deleteLayer(y) {
@@ -398,6 +400,7 @@ function deleteLayer(y) {
 }
 
 
+
 document.getElementById("deleteLayer0Button").addEventListener("click", () => {
   deleteLayer(0);
 });
@@ -411,6 +414,12 @@ const animate = function () {
    if (trominoMesh) {
     if (collisionCheck(trominoMesh)) {
       addToLayer(trominoMesh);
+
+      for (let y = 0; y < gridHeight; y++) {
+        if (isLayerFull(y)) {
+          deleteLayer(y);
+        }
+      } 
 
       let r = Math.round(Math.random());
       if (r === 1) {
