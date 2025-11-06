@@ -5,6 +5,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 let moveSpeed = 0.005;
 let speedUp = 0.08;
 const gridHeight = 20;
+let allowLTrominos = true;
 
 // --- END SETTINGS ---
 
@@ -195,12 +196,23 @@ function spawnLTromino() {
   scene.add(trominoMesh);
 }
 
+function slam() {
+  if (!trominoMesh) return;
+  while (!collisionCheck(trominoMesh)) {
+    trominoMesh.position.y -= cellSize;
+    trominoMesh.updateMatrixWorld(true);
+  }
+}
+
 function moveTromino() {
    window.addEventListener('keydown', (event) => {
     if (!trominoMesh) return;
     const step = cellSize;
 
     switch (event.key) {
+      case ' ':
+        slam();
+        break;
       case 'p':
         moveSpeed = speedUp;
         break;
@@ -341,6 +353,7 @@ function addToLayer(trominoGroup) {
   trominoMesh = null;
 }
 
+//returns a boolean
 function collisionCheck(TrominoGroup) {
   // ensure children world positions are current
   TrominoGroup.updateMatrixWorld(true);
@@ -400,9 +413,33 @@ function deleteLayer(y) {
 }
 
 
-
-document.getElementById("deleteLayer0Button").addEventListener("click", () => {
+const delBtn = document.getElementById("deleteLayer0Button");
+delBtn.addEventListener("click", () => {
   deleteLayer(0);
+  delBtn.blur();
+});
+
+//Stops time
+//Actually just sets move spd of tromino to 0
+const timeBtn = document.getElementById("timeBtn");
+timeBtn.addEventListener("click", () => {
+  if (moveSpeed) {
+    moveSpeed = 0;
+  } else {
+    moveSpeed = 0.005;
+  }
+  timeBtn.blur();
+});
+
+//Disables/enables the random spawning of L blocks
+const lBtn = document.getElementById("lBtn");
+lBtn.addEventListener("click", () => {
+  if (allowLTrominos) {
+    allowLTrominos = false;
+  } else {
+    allowLTrominos = true;
+  }
+  lBtn.blur();
 });
 
 spawnStraightTromino();
@@ -415,6 +452,7 @@ const animate = function () {
     if (collisionCheck(trominoMesh)) {
       addToLayer(trominoMesh);
 
+      //Check if every layer is full and delete
       for (let y = 0; y < gridHeight; y++) {
         if (isLayerFull(y)) {
           deleteLayer(y);
@@ -422,7 +460,7 @@ const animate = function () {
       } 
 
       let r = Math.round(Math.random());
-      if (r === 1) {
+      if (r === 1 && allowLTrominos) {
         spawnLTromino();
       } else {
         spawnStraightTromino();
