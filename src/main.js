@@ -131,7 +131,9 @@ function spawnTromino() {
   }
   // adds one cube as a part of tromino
   const trominoGeometry = new THREE.BoxGeometry(0.2, 0.2, 0.2);
-  const trominoMaterials = new THREE.MeshPhongMaterial({ color: lastColor });
+  const trominoMaterials = new THREE.MeshPhongMaterial({ 
+    color: lastColor,
+  });
 
   const cube = new THREE.Mesh(trominoGeometry, trominoMaterials);
   // keep cube local; position relative to its parent
