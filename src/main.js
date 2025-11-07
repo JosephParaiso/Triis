@@ -6,6 +6,7 @@ let moveSpeed = 0.005;
 let speedUp = 0.08;
 const gridHeight = 20;
 let allowLTrominos = true;
+const ghostEmmisionTint = 0xffff00;
 let score = 0;
 // --- END SETTINGS ---
 
@@ -136,7 +137,9 @@ function spawnTromino() {
   }
   // adds one cube as a part of tromino
   const trominoGeometry = new THREE.BoxGeometry(0.2, 0.2, 0.2);
-  const trominoMaterials = new THREE.MeshPhongMaterial({ color: lastColor });
+  const trominoMaterials = new THREE.MeshPhongMaterial({ 
+    color: lastColor,
+  });
 
   const cube = new THREE.Mesh(trominoGeometry, trominoMaterials);
   // keep cube local; position relative to its parent
@@ -171,6 +174,11 @@ function spawnStraightTromino() {
   // Save and add to scene
   trominoMesh = group;
   scene.add(trominoMesh);
+
+  if (ghostGroup) {
+    scene.remove(ghostGroup);
+    ghostGroup = null;
+  }
 }
 
 function spawnLTromino() {
@@ -200,6 +208,11 @@ function spawnLTromino() {
   // Save and add to scene
   trominoMesh = group;
   scene.add(trominoMesh);
+
+  if (ghostGroup) {
+    scene.remove(ghostGroup);
+    ghostGroup = null;
+  }
 }
 
 function slam() {
@@ -416,6 +429,59 @@ function collisionCheck(TrominoGroup) {
   return false;
 }
 
+let ghostGroup = null;
+
+function updateGhost() {
+
+  if (!trominoMesh) {
+    scene.remove(ghostGroup);
+    ghostGroup = null;
+    return;
+  }
+
+  // Create ghost
+  if (!ghostGroup) {
+    ghostGroup = trominoMesh.clone(true);
+
+    ghostGroup.traverse(obj => {
+      if (obj.isMesh) {
+        obj.material = new THREE.MeshPhongMaterial({
+          color: 0xffffff,
+          opacity: 0.80,
+          emissive: ghostEmmisionTint,
+          emissiveIntensity: 0.5,
+          side: THREE.DoubleSide
+        });
+      }
+    });
+
+    //stop z fighting
+    ghostGroup.scale.set(0.99, 0.99, 0.99);
+
+    scene.add(ghostGroup);
+  }
+
+  trominoMesh.updateMatrixWorld(true);
+
+  //Match current tromino rotation
+  ghostGroup.rotation.copy(trominoMesh.rotation);
+  ghostGroup.position.x = trominoMesh.position.x;
+  ghostGroup.position.z = trominoMesh.position.z;
+
+  const topY = gridY + (gridHeight - 0.5) * cellSize;
+  ghostGroup.position.y = topY;
+  ghostGroup.updateMatrixWorld(true);
+
+  while (true) {
+    if (collisionCheck(ghostGroup)) {
+      break;
+    }
+
+    ghostGroup.position.y -= cellSize;
+    ghostGroup.updateMatrixWorld(true);
+  }
+}
+
 //returns a boolean
 function isLayerFull(y){
   for (let x = 0; x < gridSize; x++) {
@@ -449,7 +515,6 @@ function deleteLayer(y) {
   score += 100;
   updateScoreDisplay();
 }
-
 
 const delBtn = document.getElementById("deleteLayer0Button");
 delBtn.addEventListener("click", () => {
@@ -507,6 +572,8 @@ const animate = function () {
       trominoMesh.position.y -= moveSpeed;
     }
   }
+
+  updateGhost();
 
   requestAnimationFrame( animate );
 
