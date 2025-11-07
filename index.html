@@ -8,10 +8,15 @@
     <title>Triis</title>
   </head>
   <body>
-    <canvas id="c" width="800" height="800"></canvas>
-    <button id="deleteLayer0Button" type="button">Delete Layer 0</button>
-    <button id="timeBtn" type="button">Pause/resume time</button>
-    <button id="lBtn" type="button">Disable/enable L</button>
+    <div class="stage">
+      <h3 id="scoreText">Score: </h3>
+      <canvas id="c" width="800" height="800"></canvas>
+      <div class="controls">
+        <button id="deleteLayer0Button" type="button">Delete Layer 0</button>
+        <button id="timeBtn" type="button">Pause/resume time</button>
+        <button id="lBtn" type="button">Disable/enable L</button>
+      </div>
+    </div>
     <script type="module" src="/src/main.js"></script>
   </body>
 </html>
