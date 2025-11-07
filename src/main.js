@@ -6,13 +6,19 @@ let moveSpeed = 0.005;
 let speedUp = 0.08;
 const gridHeight = 20;
 let allowLTrominos = true;
-
+let score = 0;
 // --- END SETTINGS ---
 
 const layers = [];
 
 //get the canvas
 const canvas = document.querySelector("#c");
+
+const scoreEl = document.getElementById("scoreText");
+function updateScoreDisplay() {
+  if (scoreEl) scoreEl.textContent = String(score);
+}
+updateScoreDisplay();
 
 // initialize the scene
 const scene = new THREE.Scene();
@@ -298,12 +304,36 @@ function withinXZBounds(group) {
   return true;
 }
 
+// Ensure the tromino won't overlap any already-placed cubes at its current (rounded) layer
+function overlapsOccSameLayer(group) {
+  group.updateMatrixWorld(true);
+  for (const cube of group.children) {
+    const wp = new THREE.Vector3();
+    cube.getWorldPosition(wp);
+    const iy = yToLayerIndex(wp.y);
+    const { ix, iz } = xzToCellIndices(wp.x, wp.z);
+
+    // If it's out of bounds vertically or horizontally, treat as overlap handled elsewhere
+    if (!inBounds(ix, iy, iz)) {
+      return true;
+    }
+
+    // If the target cell is already occupied by a placed cube, this move would phase through
+    if (occ[iy][ix][iz]) {
+      return true;
+    }
+  }
+  return false;
+}
+
 // Try a transform; keep it only if all children remain in-bounds
 function tryTransform(group, apply) {
   const prevPos = group.position.clone();
   const prevRot = group.rotation.clone();
   apply();
-  if (withinXZBounds(group)) {
+
+  // keep x/z within bounds and also prevent overlapping already placed cubes
+  if (withinXZBounds(group) && !overlapsOccSameLayer(group)) {
     snapToGrid(group);
     return true;
   } else {
@@ -348,6 +378,10 @@ function addToLayer(trominoGroup) {
       occ[iy][ix][iz] = cube;
     }
   });
+
+  // Award points for placing a piece
+  score += 1;
+  updateScoreDisplay();
 
   scene.remove(trominoGroup);
   trominoMesh = null;
@@ -410,6 +444,10 @@ function deleteLayer(y) {
   }
 
   layers[y] = [];
+
+  // Award points for clearing a layer
+  score += 100;
+  updateScoreDisplay();
 }
 
 
