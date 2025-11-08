@@ -544,9 +544,50 @@ function deleteLayer(y) {
   updateScoreDisplay();
 }
 
+//This function takes variable startY, which is the layer height deleted, and tells the blocks above it to fall
+//Should be called after deleteLayer()
+function blockFall(startY) {
+  // For every layer above the cleared one
+  for (let y = startY + 1; y < gridHeight; y++) {
+    for (let x = 0; x < gridSize; x++) {
+      for (let z = 0; z < gridSize; z++) {
+        const cube = occ[y][x][z];
+        if (!cube) continue; // empty cell, nothing to move
+
+        const newY = y - 1;
+
+        // move cube down one layer in occ
+        occ[y][x][z] = null;
+        occ[newY][x][z] = cube;
+
+        // update its world position to match new layer
+        cube.position.set(
+          (x - half + 0.5) * cellSize,
+          gridY + (newY + 0.5) * cellSize,
+          (z - half + 0.5) * cellSize
+        );
+      }
+    }
+  }
+
+  // Rebuild layers[] from occ so it's consistent
+  for (let y = 0; y < gridHeight; y++) {
+    layers[y] = [];
+    for (let x = 0; x < gridSize; x++) {
+      for (let z = 0; z < gridSize; z++) {
+        const cube = occ[y][x][z];
+        if (cube) {
+          layers[y].push(cube);
+        }
+      }
+    }
+  }
+}
+
 const delBtn = document.getElementById("deleteLayer0Button");
 delBtn.addEventListener("click", () => {
   deleteLayer(0);
+  blockFall(0);
   delBtn.blur();
 });
 
@@ -587,6 +628,8 @@ const animate = function () {
       for (let y = 0; y < gridHeight; y++) {
         if (isLayerFull(y)) {
           deleteLayer(y);
+          blockFall(y);
+          y--; //y-- because of the blocks falling in the deleted layer we need to check it again
         }
       } 
 
