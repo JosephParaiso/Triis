@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { GUI } from 'dat.gui';
 
 // --- SETTINGS ---
 let moveSpeed = 0.005;
@@ -9,6 +10,10 @@ let allowLTrominos = true;
 const ghostEmmisionTint = 0xffff00;
 let score = 0;
 // --- END SETTINGS ---
+
+let isGameOver = false;
+const gui = new GUI();
+const gameOverText = document.getElementById("gameOverText");
 
 const layers = [];
 
@@ -43,9 +48,9 @@ if (bg) {
 }
 // --- END AUDIO AUTOPLAY KICK ---
 
-const scoreEl = document.getElementById("scoreText");
+const scoreValueEl = document.getElementById("scoreValue");
 function updateScoreDisplay() {
-  if (scoreEl) scoreEl.textContent = String(score);
+  if (scoreValueEl) scoreValueEl.textContent = String(score);
 }
 updateScoreDisplay();
 
@@ -254,6 +259,7 @@ function slam() {
 function moveTromino() {
    window.addEventListener('keydown', (event) => {
     if (!trominoMesh) return;
+    if (isGameOver) return;
     const step = cellSize;
 
     switch (event.key) {
@@ -547,12 +553,12 @@ function deleteLayer(y) {
 //This function takes variable startY, which is the layer height deleted, and tells the blocks above it to fall
 //Should be called after deleteLayer()
 function blockFall(startY) {
-  // For every layer above the cleared one
+  // For every layer above the deleted layer
   for (let y = startY + 1; y < gridHeight; y++) {
     for (let x = 0; x < gridSize; x++) {
       for (let z = 0; z < gridSize; z++) {
         const cube = occ[y][x][z];
-        if (!cube) continue; // empty cell, nothing to move
+        if (!cube) continue;
 
         const newY = y - 1;
 
@@ -584,6 +590,73 @@ function blockFall(startY) {
   }
 }
 
+function stopTime() {
+  moveSpeed = 0;
+}
+
+function resumeTime() {
+  moveSpeed = 0.005;
+}
+
+function checkGameFail() {
+  for (let x = 0; x < gridSize; x++) {
+    for (let z = 0; z < gridSize; z++) {
+      if (occ[gridHeight - 1][x][z] !== null) {
+        gameOver();
+        return;
+      }
+    }
+  }
+}
+
+function gameOver() {
+  console.log("you failed!");
+  stopTime();
+  isGameOver = true;
+  gameOverText.classList.add("visible");
+}
+
+function restartGame() {
+  isGameOver = false;
+  score = 0;
+  updateScoreDisplay();
+  gameOverText.classList.remove("visible");
+
+  // clear occ
+  for (let y = 0; y < gridHeight; y++) {
+    for (let x = 0; x < gridSize; x++) {
+      for (let z = 0; z < gridSize; z++) {
+        occ[y][x][z] = null;
+      }
+    }
+  }
+
+  // clear layers
+  for (let y = 0; y < layers.length; y++) {
+    if (!layers[y]) continue;
+    for (const cube of layers[y]) {
+      scene.remove(cube);
+      cube.geometry.dispose();
+      cube.material.dispose();
+    }
+    layers[y] = [];
+  }
+
+  if (ghostGroup) {
+    scene.remove(ghostGroup);
+    ghostGroup = null;
+  }
+
+  if (trominoMesh) {
+    scene.remove(trominoMesh);
+    trominoMesh = null;
+  }
+
+  // reset movement and respawn
+  moveSpeed = 0.005;
+  spawnStraightTromino();
+}
+
 const delBtn = document.getElementById("deleteLayer0Button");
 delBtn.addEventListener("click", () => {
   deleteLayer(0);
@@ -591,14 +664,14 @@ delBtn.addEventListener("click", () => {
   delBtn.blur();
 });
 
-//Stops time
+//Stops time for debug, not the same as stopping time for game over or pausing, allows movement
 //Actually just sets move spd of tromino to 0
 const timeBtn = document.getElementById("timeBtn");
 timeBtn.addEventListener("click", () => {
   if (moveSpeed) {
-    moveSpeed = 0;
+    stopTime();
   } else {
-    moveSpeed = 0.005;
+    resumeTime();
   }
   timeBtn.blur();
 });
@@ -614,13 +687,27 @@ lBtn.addEventListener("click", () => {
   lBtn.blur();
 });
 
+const restartBtn = document.getElementById("restartBtn");
+restartBtn.addEventListener("click", () => {
+  restartGame();
+  restartBtn.blur();
+});
+
+const params = {
+  muteMusic: false
+};
+
+gui.add(params, "muteMusic").onChange(v => bg.muted = v);
+
 spawnStraightTromino();
-moveTromino();
+if(!isGameOver) {
+  moveTromino();
+}
 
 // animation
 const animate = function () {
 
-   if (trominoMesh) {
+   if ( trominoMesh && !isGameOver ) {
     if (collisionCheck(trominoMesh)) {
       addToLayer(trominoMesh);
 
@@ -629,7 +716,7 @@ const animate = function () {
         if (isLayerFull(y)) {
           deleteLayer(y);
           blockFall(y);
-          y--; //y-- because of the blocks falling in the deleted layer we need to check it again
+          y--; //because of the blocks falling in the deleted layer we need to check it again
         }
       } 
 
@@ -645,12 +732,10 @@ const animate = function () {
   }
 
   updateGhost();
-
+  checkGameFail();
   requestAnimationFrame( animate );
 
   controls.update();
-  // maintain grid snapping for tromino
-  //snapToGrid(trominoMesh); // Only call this when the tromino is moved
   renderer.render(scene, camera);
 };
 
