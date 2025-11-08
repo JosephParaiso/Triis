@@ -15,6 +15,34 @@ const layers = [];
 //get the canvas
 const canvas = document.querySelector("#c");
 
+// --- AUDIO AUTOPLAY KICK ---
+const bg = document.getElementById('bgMusic');
+if (bg) {
+  // Ensure it loops and try to autoplay muted
+  bg.loop = true;
+  bg.muted = true;
+  const p = bg.play();
+  if (p && typeof p.then === 'function') {
+    p.catch(() => { /* ignore autoplay block errors */ });
+  }
+
+  // Unmute and ensure playing on first user interaction
+  const unmuteKick = () => {
+    bg.muted = false;
+    const q = bg.play();
+    if (q && typeof q.then === 'function') {
+      q.catch(() => { /* ignore */ });
+    }
+    window.removeEventListener('pointerdown', unmuteKick);
+    window.removeEventListener('keydown', unmuteKick);
+    window.removeEventListener('touchstart', unmuteKick);
+  };
+  window.addEventListener('pointerdown', unmuteKick, { once: true });
+  window.addEventListener('keydown', unmuteKick, { once: true });
+  window.addEventListener('touchstart', unmuteKick, { once: true });
+}
+// --- END AUDIO AUTOPLAY KICK ---
+
 const scoreEl = document.getElementById("scoreText");
 function updateScoreDisplay() {
   if (scoreEl) scoreEl.textContent = String(score);
