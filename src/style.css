@@ -109,9 +109,26 @@ canvas {
   gap: 12px;
 }
 
+.topBar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+}
+
 .controls {
   display: flex;
   gap: 12px;
   flex-wrap: wrap;
   justify-content: center;
+}
+
+#gameOverText {
+  font-family: inherit;
+  opacity: 0;
+  pointer-events: none;
+}
+
+#gameOverText.visible {
+  opacity: 1;
 }
