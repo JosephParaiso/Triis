@@ -19,6 +19,11 @@ const layers = [];
 
 //get the canvas
 const canvas = document.querySelector("#c");
+// Make canvas focusable and focus on click/touch
+if (canvas) {
+  canvas.setAttribute('tabindex', '0');
+  canvas.addEventListener('pointerdown', () => canvas.focus());
+}
 
 // --- AUDIO AUTOPLAY KICK ---
 const bg = document.getElementById('bgMusic');
@@ -76,6 +81,11 @@ renderer.setSize(size * 0.8, size * 0.8);
 
 let trominoMesh; // global ref for current tromino (THREE.Group)
 
+// Fixed world axes for predictable rotations
+const WORLD_X = new THREE.Vector3(1, 0, 0);
+const WORLD_Y = new THREE.Vector3(0, 1, 0);
+const WORLD_Z = new THREE.Vector3(0, 0, 1);
+
 // adds the box to the scene with Phong
 const boxGeometry = new THREE.BoxGeometry(1.201, 4, 1.201);
 const boxMaterial = new THREE.MeshPhongMaterial({
@@ -90,7 +100,7 @@ scene.add(boxMesh);
 // adds the ground to the scene with Phong
 const groundGeometry = new THREE.BoxGeometry(1.4, 0.1, 1.4);
 const groundMaterial = new THREE.MeshPhongMaterial({
-  color: "white",
+  color: 0x999999,
 });
 
 
@@ -260,6 +270,10 @@ function moveTromino() {
    window.addEventListener('keydown', (event) => {
     if (!trominoMesh) return;
     if (isGameOver) return;
+    // Prevents browser from scrolling on control keys (arrows, space)
+    if (["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", " "].includes(event.key)) {
+      event.preventDefault();
+    }
     const step = cellSize;
 
     switch (event.key) {
@@ -282,22 +296,28 @@ function moveTromino() {
         tryTransform(trominoMesh, () => { trominoMesh.position.z += step; });
         break;
       case 'a':
-        tryTransform(trominoMesh, () => { trominoMesh.rotation.x -= Math.PI / 2; });
+        // rotate -90° around world X
+        tryTransform(trominoMesh, () => { trominoMesh.rotateOnWorldAxis(WORLD_X, -Math.PI / 2); });
         break;
       case 'z':
-        tryTransform(trominoMesh, () => { trominoMesh.rotation.x += Math.PI / 2; });
+        // rotate +90° around world X
+        tryTransform(trominoMesh, () => { trominoMesh.rotateOnWorldAxis(WORLD_X,  Math.PI / 2); });
         break;
       case 's':
-        tryTransform(trominoMesh, () => { trominoMesh.rotation.y += Math.PI / 2; });
+        // rotate +90° around world Y
+        tryTransform(trominoMesh, () => { trominoMesh.rotateOnWorldAxis(WORLD_Y,  Math.PI / 2); });
         break;
       case 'x':
-        tryTransform(trominoMesh, () => { trominoMesh.rotation.y -= Math.PI / 2; });
+        // rotate -90° around world Y
+        tryTransform(trominoMesh, () => { trominoMesh.rotateOnWorldAxis(WORLD_Y, -Math.PI / 2); });
         break;
       case 'd':
-        tryTransform(trominoMesh, () => { trominoMesh.rotation.z += Math.PI / 2; });
+        // rotate +90° around world Z
+        tryTransform(trominoMesh, () => { trominoMesh.rotateOnWorldAxis(WORLD_Z,  Math.PI / 2); });
         break;
       case 'c':
-        tryTransform(trominoMesh, () => { trominoMesh.rotation.z -= Math.PI / 2; });
+        // rotate -90° around world Z
+        tryTransform(trominoMesh, () => { trominoMesh.rotateOnWorldAxis(WORLD_Z, -Math.PI / 2); });
         break;
     }
 
